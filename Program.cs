@@ -68,10 +68,14 @@ namespace TelegramBot
             {
                 await telegramBotClient.RemoveObservFromMyList(message);
             }
+            else if (message.Text.Contains("/photoof"))
+            {
+                await telegramBotClient.GetPhoto(message);
+            }
 
             else if (message.Text.Contains("/photo"))
             {
-                await telegramBotClient.Photo(message);
+                await telegramBotClient.GetBirdPhoto(message);
             }
 
         }

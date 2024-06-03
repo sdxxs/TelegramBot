@@ -40,7 +40,8 @@ namespace TelegramBot.TGClient
 
             string RegionCode = message.Text.Substring(message.Text.IndexOf("v") + 1);
 
-            string path = $"http://localhost:5122/api/MyBird/ObservByRegionCode?regionCode={RegionCode}";
+            string path = $"http://localhost:5122/api/MyBird/GetObservByRegionCode?regionCode={RegionCode}";//
+            //string path = $"https://my-bird-api-ce3f6d5bd9ff.herokuapp.com/api/MyBird/ObservByRegionCode?regionCode={RegionCode}";//heroku
             var client = new HttpClient();
             var request = new HttpRequestMessage
             {
@@ -52,6 +53,12 @@ namespace TelegramBot.TGClient
             {
                 response.EnsureSuccessStatusCode();
                 string ListOfObserv = await response.Content.ReadAsStringAsync();
+                if (ListOfObserv == "error")
+                {
+                    ListOfObserv= "Щось пішло не так...Ви допустили помилку в записі команди, або такого регіону не занесено до доступної нам бази даних." +
+                 "\n Спробуйте ще раз (p.s приклад команди для корректного пошуку спостережень в Києвській обсласті:/observUA-30)";
+
+                }
 
                 await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
                 text: ListOfObserv,
@@ -63,7 +70,6 @@ namespace TelegramBot.TGClient
 
         public async Task GetListOfRegionCodeUkraine(Message message)
         {
-
             string path = $"http://localhost:5122/api/MyBird/GetRegionList";
             var client = new HttpClient();
             var request = new HttpRequestMessage
@@ -124,6 +130,12 @@ namespace TelegramBot.TGClient
             {
                 response.EnsureSuccessStatusCode();
                 string result = await response.Content.ReadAsStringAsync();
+
+                if (result == "error")
+                {
+                    result="`Помилка при запиті, перевірте корректність запису команди (Введіть іd існуючого елемента, який бажаєте видалити на місці ID в команді)`";
+                }
+
                 await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
                 text: result,
                 parseMode: ParseMode.MarkdownV2,
@@ -131,7 +143,6 @@ namespace TelegramBot.TGClient
                 replyToMessageId: message.MessageId
                 );
             }
-
         }
 
         public async Task AddMyObserv(Message message)
@@ -144,6 +155,7 @@ namespace TelegramBot.TGClient
                 result = "Щось пішло не так\\.\\.\\.Ви допустили помилку в записі команди\\, ocь приклад щодо використання \\p\\.s обов\\'язково після кожної властивості *пишіть \\;* \\:" +
              "\n /addmyobserv; _\n Назва птаха\\; \n Назва місця спостереження\\; \n Дата і час\\;  \n Кількість особин цього видy\\, які спостерігались\\;_";
             }
+
             else
             {
                 long ChatId = message.Chat.Id;
@@ -159,18 +171,24 @@ namespace TelegramBot.TGClient
                 {
                     response.EnsureSuccessStatusCode();
                     result = await response.Content.ReadAsStringAsync();            
-                }               
+                }
+                if (result == "error")
+                {
+                    result = "`Помилка при запиті, перевірте корректність запису команди (ви ввели цифру на місці кількості?)`";
+                    result = result+ "Приклад щодо використання \\p\\.s обов\\'язково після кожної властивості *пишіть \\;* \\:" +
+                    "\n /addmyobserv; _\n Назва птаха\\; \n Назва місця спостереження\\; \n Дата і час\\;  \n Кількість особин цього видy\\, які спостерігались\\;_";
+                }
             }
-            await botClient.SendTextMessageAsync(
+           await botClient.SendTextMessageAsync(
                       chatId: message.Chat.Id,
                       text: result,
                       parseMode: ParseMode.MarkdownV2,
                       disableNotification: true,
                       replyToMessageId: message.MessageId);
         }
-        public async Task Photo(Message message)
+        public async Task GetBirdPhoto(Message message)
         {
-            string path = $"http://localhost:5122/api/MyBird/RandomPhotoOfBird";
+            string path = $"http://localhost:5122/api/MyBird/GetRandomPhotoOfBird";
             var client = new HttpClient();
             var request = new HttpRequestMessage
             {
@@ -199,5 +217,52 @@ namespace TelegramBot.TGClient
 
         }
 
+        public async Task GetPhoto(Message message)
+        {
+            string PhotoQuery = message.Text.Substring(message.Text.IndexOf("f") + 1);
+
+            string path = $"http://localhost:5122/api/MyBird/GetPhoto?query={PhotoQuery}";
+            var client = new HttpClient();
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(path),//address            
+            };
+
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                string url = await response.Content.ReadAsStringAsync();
+
+                if (url == "error")
+                {
+                    url = "`Щось пішло не так\\.\\.\\.Ви допустили помилку в записі команди\\, або фотографію не було знайдено\\.`" +
+               "\n `Правильний запис команди \\/photoofНАЗВАПТАХААНГЛІЙСЬКОЮ \\(p\\.s приклад команди для пошуку фотографії мартину\\: \\/photoofgull\\)`";
+                    await botClient.SendTextMessageAsync(
+                    chatId: message.Chat.Id,
+                    text: url,
+                    parseMode: ParseMode.MarkdownV2,
+                    disableNotification: true,
+                    replyToMessageId: message.MessageId
+                    );
+                }
+                else
+                {
+                    await botClient.SendPhotoAsync(
+                    chatId: message.Chat.Id,
+                    photo: InputFile.FromString(url),
+                    caption: "`Тримайте фотографію`",
+                    parseMode: ParseMode.MarkdownV2,
+                    disableNotification: true,
+                    replyToMessageId: message.MessageId,
+                    replyMarkup: new InlineKeyboardMarkup(
+                    InlineKeyboardButton.WithUrl(
+                    text: "Більше на сайті",
+                    url: "https://unsplash.com/s/photos/birds"))
+                     );
+                }
+            }
+
+        }
     }
 }
