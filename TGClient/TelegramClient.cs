@@ -41,7 +41,6 @@ namespace TelegramBot.TGClient
             string RegionCode = message.Text.Substring(message.Text.IndexOf("v") + 1);
 
             string path = $"http://localhost:5122/api/MyBird/GetObservByRegionCode?regionCode={RegionCode}";//
-            //string path = $"https://my-bird-api-ce3f6d5bd9ff.herokuapp.com/api/MyBird/ObservByRegionCode?regionCode={RegionCode}";//heroku
             var client = new HttpClient();
             var request = new HttpRequestMessage
             {
@@ -56,14 +55,15 @@ namespace TelegramBot.TGClient
                 if (ListOfObserv == "error")
                 {
                     ListOfObserv= "Щось пішло не так...Ви допустили помилку в записі команди, або такого регіону не занесено до доступної нам бази даних." +
-                 "\n Спробуйте ще раз (p.s приклад команди для корректного пошуку спостережень в Києвській обсласті:/observUA-30)";
+                 "\n Спробуйте ще раз (p.s приклад команди для коректного пошуку спостережень в Києвській обсласті:/observUA-30)";
 
                 }
 
                 await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
                 text: ListOfObserv,
                 disableNotification: true,
-                replyToMessageId: message.MessageId);
+                InlineKeyboardButton.
+                replyToMessageId: message.MessageId); ;
             }
         }
 
