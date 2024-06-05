@@ -62,7 +62,6 @@ namespace TelegramBot.TGClient
                 await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
                 text: ListOfObserv,
                 disableNotification: true,
-                InlineKeyboardButton.
                 replyToMessageId: message.MessageId); ;
             }
         }
